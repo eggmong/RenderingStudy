@@ -47,7 +47,40 @@ bool DXWindow::Init()
         wcex.hInstance,
         nullptr);
 
-	return m_window != nullptr;
+    if (m_window == nullptr)
+        return false;
+
+    // Describe swap chain
+    DXGI_SWAP_CHAIN_DESC1 swd{};
+    DXGI_SWAP_CHAIN_FULLSCREEN_DESC sfd{};
+
+    swd.Width = 1920;
+    swd.Height = 1080;
+	swd.Format = DXGI_FORMAT_R8G8B8A8_UNORM;            // RGBA 8-bit per channel. 채널당 비트 폭을 8비트(0~255)로 지정
+    swd.Stereo = false;
+	swd.SampleDesc.Count = 1;       // 1로 지정 : 픽셀 당 픽셀 하나를 의미. (멀티 샘플링이 뭐임???)
+    swd.SampleDesc.Quality = 0;     // 0으로 지정 : 다중 샘플 안티앨리어싱 없음을 의미
+    swd.BufferUsage = DXGI_USAGE_BACK_BUFFER | DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    swd.BufferCount = GetFrameCount();        // 3 넣으면 vsync...라는데 그게 뭘까? 쨌든 3으로 하면 화면에 표시되는 버퍼 하나, 그리는 버퍼 하나, 유휴 버퍼 하나가 생김.
+    swd.Scaling = DXGI_SCALING_STRETCH;     // 화면에 맞게 이미지를 늘림?
+    swd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+    swd.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
+    swd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+
+    sfd.Windowed = true;
+
+    // Swap Chain
+    auto& factory = DXContext::Get().GetDXGIFactory();
+	ComPointer<IDXGISwapChain1> sc1;
+    factory->CreateSwapChainForHwnd(DXContext::Get().GetCommandQueue(), m_window, &swd, &sfd, nullptr, &sc1);
+    // 첫번째 인자가 device인데, 사실 commandQueue임. ...왜?
+
+    if (sc1.QueryInterface(m_swapChain) == false)
+    {
+        return false;
+    }
+
+    return true;
 }
 
 void DXWindow::Update()
@@ -60,8 +93,19 @@ void DXWindow::Update()
 	}
 }
 
+void DXWindow::Present()
+{
+    if (m_swapChain == nullptr)
+        return;
+
+    m_swapChain->Present(1, 0);     // 첫번째 인자에 2를 넣으면 2프레임이 가중되는 것이라 프레임 속도가 절반이 됨. 느려짐.
+    
+}
+
 void DXWindow::Shutdown()
 {
+    m_swapChain.Release();
+
     if (m_window != nullptr)
     {
         DestroyWindow(m_window);

@@ -3,6 +3,12 @@
 
 bool DXContext::Init()
 {
+	// 장치를 생성하기 전에 할당해야 함
+	if (FAILED(CreateDXGIFactory2(0, IID_PPV_ARGS(&m_dxgiFactory))))
+	{
+		return false;
+	}
+
 	if (FAILED(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device))))
 	{
 		return false;
@@ -53,9 +59,10 @@ void DXContext::Shutdown()
 	{
 		CloseHandle(m_fenceEvent);
 	}
-
+	m_fence.Release();
 	m_device.Release();
 	m_cmdQueue.Release();
+	m_dxgiFactory.Release();
 }
 
 void DXContext::SignalAndWait()

@@ -13,11 +13,21 @@ public:
 	ID3D12GraphicsCommandList7* InitCommandList();
 	void ExecuteCommandList();
 
+	inline void Flush(size_t count)
+	{
+		for (size_t i = 0; i < count; i++)
+			SignalAndWait();
+	}
+
+	inline ComPointer<IDXGIFactory7>& GetDXGIFactory() { return m_dxgiFactory; }
+
 	inline ComPointer<ID3D12Device10>& GetDevice() { return m_device; }
 
 	inline ComPointer<ID3D12CommandQueue>& GetCommandQueue() { return m_cmdQueue; }
 
 private:
+	ComPointer<IDXGIFactory7> m_dxgiFactory; // DXGI íŒ©í† ë¦¬
+
 	ComPointer<ID3D12Device10> m_device;
 	ComPointer<ID3D12CommandQueue> m_cmdQueue;      // command queue
 
@@ -33,7 +43,7 @@ public:
     DXContext(const DXContext&) = delete;
     DXContext& operator=(const DXContext&) = delete;
 
-    // ½Ì±ÛÅæ
+    // ì‹±ê¸€í†¤
     inline static DXContext& Get()
     {
         static DXContext instance;

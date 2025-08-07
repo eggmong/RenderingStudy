@@ -21,7 +21,11 @@ int main()
 			auto* cmdList = DXContext::Get().InitCommandList();
 
 			DXContext::Get().ExecuteCommandList();
+			DXWindow::Get().Present();
 		}
+
+		// Flushing the command queue to ensure all commands are executed before shutdown
+		DXContext::Get().Flush(DXWindow::GetFrameCount());
 
 		DXWindow::Get().Shutdown();
 		DXContext::Get().Shutdown();
