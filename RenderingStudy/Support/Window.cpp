@@ -33,6 +33,7 @@ bool DXWindow::Init()
 	monitorInfo.cbSize = sizeof(monitorInfo);
 	GetMonitorInfoW(monitor, &monitorInfo);
 
+	// Window 생성
     m_window = CreateWindowExW(
         WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW,
         (LPCWSTR)m_wndClass,
@@ -117,12 +118,83 @@ void DXWindow::Shutdown()
     }
 }
 
+void DXWindow::Resize()
+{
+    RECT cr;
+    if (GetClientRect(m_window, &cr))
+    {
+        m_width = cr.right - cr.left;
+        m_height = cr.bottom - cr.top;
+
+        if (m_width == 0 || m_height == 0)
+            return; // 윈도우가 최소화된 상태라면 리사이즈 하지 않음.
+
+		m_swapChain->ResizeBuffers(GetFrameCount(), m_width, m_height, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING);
+        m_shouldResize = false;
+    }
+}
+
+void DXWindow::SetFullscreen(bool enabled)
+{
+	// 윈도우 스타일 설정
+    DWORD style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
+    DWORD exStyle = WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW;
+
+    if (enabled)
+    {
+        style = WS_POPUP | WS_VISIBLE;
+        exStyle = WS_EX_APPWINDOW;
+    }
+
+    // 스타일 적용 함수. 스타일을 저장한다?
+    SetWindowLongW(m_window, GWL_STYLE, style);
+    SetWindowLongW(m_window, GWL_EXSTYLE, exStyle);
+
+    // 윈도우 사이즈 조정
+    if (enabled)
+    {
+        // 전체 화면 모드
+        HMONITOR monitor = MonitorFromWindow(m_window, MONITOR_DEFAULTTONEAREST);   // 현재 창이 띄워진 모니터 가져옴
+        MONITORINFO monitorInfo{ };
+        monitorInfo.cbSize = sizeof(monitorInfo);
+        if (GetMonitorInfoW(monitor, &monitorInfo))
+        {
+            // 창 위치 설정
+            SetWindowPos(m_window, nullptr,
+                monitorInfo.rcMonitor.left,
+                monitorInfo.rcMonitor.top,
+                monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
+                monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
+                SWP_NOZORDER);
+        }
+    }
+    else
+    {
+        // 전체화면 창 모드
+        ShowWindow(m_window, SW_MAXIMIZE);
+    }
+
+	m_isFullscreen = enabled;
+}
+
 LRESULT DXWindow::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
+    case WM_KEYDOWN:
+            if (wParam == VK_F11)
+            {
+				Get().SetFullscreen(Get().m_isFullscreen == false);
+            }
+            break;
+    case WM_SIZE:
+            if (lParam && (HIWORD(lParam) != Get().m_width || LOWORD(lParam) != Get().m_height))
+            {
+                Get().m_shouldResize = true;
+            }
+            break;
     case WM_CLOSE:
-		    Get().m_shouldClose = true;
+            Get().m_shouldClose = true;
             return 0;
     }
 

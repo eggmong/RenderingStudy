@@ -82,7 +82,7 @@ void DXContext::SignalAndWait()
 	}
 }
 
-ID3D12GraphicsCommandList7* DXContext::InitCommandList()
+ID3D12GraphicsCommandList5* DXContext::InitCommandList()
 {
 	m_cmdAllocator->Reset();
 	m_cmdList->Reset(m_cmdAllocator.Get(), nullptr);

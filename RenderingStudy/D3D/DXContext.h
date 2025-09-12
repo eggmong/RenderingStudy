@@ -10,7 +10,8 @@ public:
     void Shutdown();
 
     void SignalAndWait();
-	ID3D12GraphicsCommandList7* InitCommandList();
+	//ID3D12GraphicsCommandList7* InitCommandList(); <- win10 에서 안됨
+	ID3D12GraphicsCommandList5* InitCommandList();
 	void ExecuteCommandList();
 
 	inline void Flush(size_t count)
@@ -21,18 +22,19 @@ public:
 
 	inline ComPointer<IDXGIFactory7>& GetDXGIFactory() { return m_dxgiFactory; }
 
-	inline ComPointer<ID3D12Device10>& GetDevice() { return m_device; }
+	// inline ComPointer<ID3D12Device10>& GetDevice() { return m_device; } <- win10 에서 안됨
+	inline ComPointer<ID3D12Device5>& GetDevice() { return m_device; }
 
 	inline ComPointer<ID3D12CommandQueue>& GetCommandQueue() { return m_cmdQueue; }
 
 private:
 	ComPointer<IDXGIFactory7> m_dxgiFactory; // DXGI 팩토리
 
-	ComPointer<ID3D12Device10> m_device;
+	ComPointer<ID3D12Device5> m_device;
 	ComPointer<ID3D12CommandQueue> m_cmdQueue;      // command queue
 
 	ComPointer<ID3D12CommandAllocator> m_cmdAllocator;
-	ComPointer<ID3D12GraphicsCommandList7> m_cmdList; // command list
+	ComPointer<ID3D12GraphicsCommandList5> m_cmdList; // command list
 	
     ComPointer<ID3D12Fence1> m_fence;
 	UINT64 m_fenceValue = 0;
